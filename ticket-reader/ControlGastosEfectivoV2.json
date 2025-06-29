@@ -1,0 +1,572 @@
+{
+  "name": "ControlGastosEfectivoV2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1400,
+        20
+      ],
+      "id": "42d5f4aa-00ca-42aa-9abd-282a5352ae64",
+      "name": "Telegram Trigger",
+      "webhookId": "f4e88b91-6881-4488-a2fd-c3026b345bce",
+      "credentials": {
+        "telegramApi": {
+          "id": "ECzgiOxA603Y8j23",
+          "name": "AndrewJoeAssistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Eres un Asistente de Gestión de Tickets y Análisis de Datos. Manejas una base de datos relacional con tickets y sus productos asociados.\n\nESTRUCTURA DE LA BASE DE DATOS:\n\n**Schema: public**\n\n**Tabla receipts (Tickets principales):**\n- id (PRIMARY KEY, SERIAL)\n- business_name (VARCHAR(255), NOT NULL) - Nombre del negocio\n- business_address (TEXT) - Dirección del negocio\n- business_tax_id (VARCHAR(50)) - RFC o ID fiscal\n- receipt_number (VARCHAR(100)) - Número de folio\n- receipt_date (TIMESTAMP, NOT NULL) - Fecha y hora del ticket\n- payment_method (VARCHAR(50)) - Método de pago\n- tax_amount (DECIMAL(10,2)) - Monto de impuestos\n- total_amount (DECIMAL(10,2), NOT NULL) - Total del ticket\n- created_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)\n\n**Tabla receipt_items (Productos del ticket):**\n- id (PRIMARY KEY, SERIAL)\n- receipt_id (INTEGER, FOREIGN KEY -> receipts.id)\n- product_name (VARCHAR(255), NOT NULL) - Nombre del producto\n- product_code (VARCHAR(100)) - Código del producto\n- category (VARCHAR(100)) - Categoría del producto\n- quantity (DECIMAL(10,3), NOT NULL) - Cantidad\n- unit_price (DECIMAL(10,2), NOT NULL) - Precio unitario\n- total_price (DECIMAL(10,2), NOT NULL) - Precio total\n- tax_rate (DECIMAL(5,2)) - Tasa de impuesto\n- created_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)\n\nQUERIES QUE PUEDES EJECUTAR:\n\n**Para INSERTAR tickets:**\n```sql\n-- 1. Insertar ticket principal y obtener ID\nINSERT INTO public.receipts (business_name, total_amount, receipt_date, business_address, receipt_number, payment_method, tax_amount, business_tax_id)\nVALUES ('NOMBRE_NEGOCIO', TOTAL, 'YYYY-MM-DD HH:MM:SS', 'DIRECCION', 'FOLIO', 'METODO_PAGO', IMPUESTOS, 'RFC')\nRETURNING id;\n\n-- 2. Insertar productos (usar el ID del paso anterior)\nINSERT INTO public.receipt_items (receipt_id, product_name, quantity, unit_price, total_price, category, product_code)\nVALUES\n(ID_TICKET, 'PRODUCTO1', CANTIDAD, PRECIO_UNIT, PRECIO_TOTAL, 'CATEGORIA', 'CODIGO'),\n(ID_TICKET, 'PRODUCTO2', CANTIDAD, PRECIO_UNIT, PRECIO_TOTAL, 'CATEGORIA', 'CODIGO');\n```\n\n**Para CONSULTAS de análisis:**\n```sql\n-- Total gastado por negocio\nSELECT business_name, SUM(total_amount) as total_spent\nFROM public.receipts\nGROUP BY business_name\nORDER BY total_spent DESC;\n\n-- Productos más comprados\nSELECT product_name, SUM(quantity) as total_quantity, COUNT(*) as times_bought, AVG(unit_price) as avg_price\nFROM public.receipt_items\nGROUP BY product_name\nORDER BY total_quantity DESC;\n\n-- Gastos por mes\nSELECT DATE_TRUNC('month', receipt_date) as month, SUM(total_amount) as monthly_total, COUNT(*) as tickets_count\nFROM public.receipts\nGROUP BY month\nORDER BY month DESC;\n\n-- Gastos por día\nSELECT DATE(receipt_date) as day, SUM(total_amount) as daily_total\nFROM public.receipts\nGROUP BY day\nORDER BY day DESC;\n\n-- Desglose por negocio con productos\nSELECT r.business_name, ri.product_name, SUM(ri.quantity) as total_qty, AVG(ri.unit_price) as avg_price\nFROM public.receipts r\nJOIN public.receipt_items ri ON r.id = ri.receipt_id\nWHERE r.business_name ILIKE '%NEGOCIO%'\nGROUP BY r.business_name, ri.product_name\nORDER BY total_qty DESC;\n\n-- Comparación de precios por producto\nSELECT ri.product_name, r.business_name, ri.unit_price, r.receipt_date\nFROM public.receipt_items ri\nJOIN public.receipts r ON ri.receipt_id = r.id\nWHERE ri.product_name ILIKE '%PRODUCTO%'\nORDER BY ri.unit_price ASC;\n```\n\nCUANDO RECIBAS UN JSON DE TICKET:\n1. Usa executeSqlQuery para insertar primero en 'public.receipts' con RETURNING id\n2. Usa el ID retornado para insertar los productos en 'public.receipt_items'\n3. Confirma que ambas operaciones fueron exitosas\n\nIMPORTANTE:\n- SIEMPRE usa el esquema 'public.' en todas las consultas\n- Para INSERT de tickets, usa RETURNING id para obtener el ID generado\n- Maneja las fechas en formato 'YYYY-MM-DD HH:MM:SS'\n- Los campos obligatorios son: business_name, total_amount, receipt_date, product_name, quantity, unit_price, total_price\n\n## Tools disponibles:\n- executeSqlQuery: Ejecuta consultas SQL (SELECT, INSERT, UPDATE, DELETE)\n- getDbSchemaAndTablesList: Lista tablas y esquemas disponibles\n- getTableDefinition: Obtiene estructura detallada de una tabla\n- calculator: Calculadora para operaciones matemáticas"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "1639943e-ff94-429d-aa0e-49e643bcdbf8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        240
+      ],
+      "id": "03a4b6ae-15d5-4b23-974a-4675b9fd695a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "6FYudxzGuVeBaGPr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=```{{ $json.output }}```",
+        "additionalFields": {
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        0
+      ],
+      "id": "f1de5cc1-504a-4249-9b81-68985a5914d5",
+      "name": "Send a text message",
+      "webhookId": "d7b5e002-ba0c-42a1-8d3d-1abb0bcdec4c",
+      "credentials": {
+        "telegramApi": {
+          "id": "ECzgiOxA603Y8j23",
+          "name": "AndrewJoeAssistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        200,
+        240
+      ],
+      "id": "4b77299b-6dc8-4658-b075-eaf551b88a49",
+      "name": "Memory",
+      "credentials": {
+        "postgres": {
+          "id": "zUGWG1l5RAQLKTaJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "executeSqlQuery: Ejecuta consultas SQL en PostgreSQL para obtener datos y realizar inserciones (INSERT). Asegúrate de incluir las tablas con su esquema correcto. Cada tabla está asociada con algún esquema en la base de datos. Puede usarse tanto para consultas SELECT como para INSERT de nuevos registros.",
+        "operation": "executeQuery",
+        "query": "{{ $fromAI(\"sql_query\", \"SQL Query\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        440,
+        500
+      ],
+      "id": "fac58b57-3934-4555-bd9d-83686602e246",
+      "name": "executeSqlQuery",
+      "credentials": {
+        "postgres": {
+          "id": "zUGWG1l5RAQLKTaJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "getDbSchemaAndTablesList: Obtiene una lista completa de todas las tablas junto con sus esquemas correspondientes en la base de datos",
+        "operation": "executeQuery",
+        "query": "SELECT \n    table_schema,\n    table_name\nFROM information_schema.tables\nWHERE table_type = 'BASE TABLE'\n    AND table_schema NOT IN ('pg_catalog', 'information_schema')\nORDER BY table_schema, table_name;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        620,
+        500
+      ],
+      "id": "2016af4f-9f07-4dba-ac0c-7b0f598ce0d8",
+      "name": "getDbSchemaAndTablesList",
+      "credentials": {
+        "postgres": {
+          "id": "zUGWG1l5RAQLKTaJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "getTableDefinition: Obtiene la definición de la tabla para encontrar todas las columnas, tipos de datos y relaciones",
+        "operation": "executeQuery",
+        "query": "select\n  c.column_name,\n  c.data_type,\n  c.is_nullable,\n  c.column_default,\n  tc.constraint_type,\n  ccu.table_name AS referenced_table,\n  ccu.column_name AS referenced_column\nfrom\n  information_schema.columns c\nLEFT join\n  information_schema.key_column_usage kcu\n  ON c.table_name = kcu.table_name\n  AND c.column_name = kcu.column_name\nLEFT join\n  information_schema.table_constraints tc\n  ON kcu.constraint_name = tc.constraint_name\n  AND tc.constraint_type = 'FOREIGN KEY'\nLEFT join\n  information_schema.constraint_column_usage ccu\n  ON tc.constraint_name = ccu.constraint_name\nwhere\n  c.table_name = '{{ $fromAI(\"table_name\") }}'\n  AND c.table_schema = '{{ $fromAI(\"schema_name\") }}'\norder by\n  c.ordinal_position",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        500
+      ],
+      "id": "ebecea22-ba09-4337-80df-61766ee31ec9",
+      "name": "getTableDefinition",
+      "credentials": {
+        "postgres": {
+          "id": "zUGWG1l5RAQLKTaJ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# Para modo: \"Run Once for All Items\"\nfor item in _input.all():\n    # Verificar si existe data binaria\n    if 'data' in item.binary:\n        # Obtener la extensión del archivo original si existe\n        original_filename = item.binary.data.get('fileName', 'file')\n        \n        # Determinar el nuevo MIME type basado en la extensión\n        if original_filename.lower().endswith('.jpg') or original_filename.lower().endswith('.jpeg'):\n            item.binary.data['mimeType'] = 'image/jpeg'\n        elif original_filename.lower().endswith('.png'):\n            item.binary.data['mimeType'] = 'image/png'\n        else:\n            # Por defecto, asignar jpeg si no se puede determinar\n            item.binary.data['mimeType'] = 'image/jpeg'\n\nreturn _input.all()"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -740,
+        140
+      ],
+      "id": "883be281-4568-4d68-b5d9-1fd02059f147",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "6806a5c9-45c6-4e7d-a7ae-357125670002"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "mensaje_texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "daacd1e5-f0d2-4d5f-975a-bf3c3a0f48e6",
+                    "leftValue": "={{ $json.message.photo[0] }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "mensaje_foto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1180,
+        20
+      ],
+      "id": "a08b4a45-7da4-4f29-9423-5c883d7cb17e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[3]?.file_id || $json.message.photo[2]?.file_id || $json.message.photo[1]?.file_id}}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -940,
+        140
+      ],
+      "id": "1593c5cd-2442-4727-a339-8e2d63702a2f",
+      "name": "Get a file",
+      "webhookId": "59a7bc9f-0b63-4963-8d28-c1cc5750e7b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "ECzgiOxA603Y8j23",
+          "name": "AndrewJoeAssistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "Analiza esta imagen de ticket/recibo/factura línea por línea con MÁXIMA PRECISIÓN. Lee cada número exactamente como aparece.\n\nINSTRUCCIONES:\n- Lee el texto EXACTAMENTE como está escrito\n- Verifica cada número DOS VECES antes de incluirlo\n- Si no puedes leer algo claramente, pon null\n- Incluye TODOS los productos/servicios listados\n- Detecta descuentos/promociones (líneas con signo negativo)\n\nEXTRAE:\n- Información del establecimiento (nombre, dirección, RFC/ID fiscal)\n- Número de ticket/folio/factura\n- Fecha y hora exacta de la transacción\n- Método de pago utilizado\n- Cada producto con su cantidad y precios EXACTOS\n- Impuestos y total final\n\nResponde ÚNICAMENTE con JSON válido:\n{\n  \"receipt\": {\n    \"business_name\": \"nombre exacto\",\n    \"business_address\": \"dirección completa\",\n    \"business_tax_id\": \"RFC o ID fiscal\",\n    \"receipt_number\": \"número de folio\",\n    \"receipt_date\": \"YYYY-MM-DD HH:MM:SS\",\n    \"payment_method\": \"método de pago\",\n    \"tax_amount\": 0.00,\n    \"total_amount\": 0.00\n  },\n  \"items\": [\n    {\n      \"product_name\": \"nombre exacto del producto\",\n      \"quantity\": 0.00,\n      \"unit_price\": 0.00,\n      \"total_price\": 0.00\n    }\n  ]\n}\n\nCRÍTICO: Verifica que todos los números coincidan exactamente con lo que ves en la imagen.",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {
+          "maxTokens": 2000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -520,
+        140
+      ],
+      "id": "f80004e0-3ee8-4e60-8922-b2e554fcc13c",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "6FYudxzGuVeBaGPr",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d071902d-4487-4baa-be5b-fd38d6e7b883",
+              "name": "message.text",
+              "value": "=Estos son los datos del ticket escaneado {{ $('Analyze image').item.json.choices[0].message.content }}",
+              "type": "string"
+            },
+            {
+              "id": "1b06f0e2-5ac8-4736-877a-42e0f645a802",
+              "name": "message.from.id",
+              "value": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -100,
+        140
+      ],
+      "id": "d2cf3020-7df7-4486-8a64-5d3c914e8cde",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Contenido recuperado: {{ $json.choices[0].message.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        140
+      ],
+      "id": "abd11d1a-5715-4c8d-a908-5d56c534d45d",
+      "name": "Send a text message1",
+      "webhookId": "e82671c7-638c-4817-bad9-8b231c32db7b",
+      "credentials": {
+        "telegramApi": {
+          "id": "ECzgiOxA603Y8j23",
+          "name": "AndrewJoeAssistant"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        240,
+        460
+      ],
+      "id": "981f9021-3a22-4931-b444-65a416836a24",
+      "name": "calculator"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "executeSqlQuery": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getDbSchemaAndTablesList": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getTableDefinition": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6a0f7e15-8f74-4b7c-aa3d-a564d3d3a8db",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6a2810bea9027ed05d5c3474bb1fccc54c1b9406eefad37bf22ded2811b263c4"
+  },
+  "id": "OOeQDwRFmgkcdCKC",
+  "tags": [
+    {
+      "createdAt": "2025-06-28T18:12:14.851Z",
+      "updatedAt": "2025-06-28T18:12:14.851Z",
+      "id": "EnH2H7odMgbRKL4u",
+      "name": "ocr"
+    },
+    {
+      "createdAt": "2025-06-28T18:12:08.795Z",
+      "updatedAt": "2025-06-28T18:12:08.795Z",
+      "id": "zTqT3YNeEMnXR36G",
+      "name": "gastos"
+    }
+  ]
+}

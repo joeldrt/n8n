@@ -1,0 +1,43 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Docker volumes data (if using bind mounts)
+data/
+postgres_data/
+n8n_data/
+
+# Workspace directories (temporary files during processing)
+workspace/input/
+workspace/output/
+workspace/temp/
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Linux
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.sql
+backup*.sql
+*.backup

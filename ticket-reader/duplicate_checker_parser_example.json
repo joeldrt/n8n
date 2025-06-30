@@ -1,0 +1,38 @@
+{
+  "goodToGo": true,
+  "ticket_data": {
+    "receipt": {
+      "business_name": "Example Store",
+      "business_address": "Example Address 123",
+      "business_tax_id": "RFC123456789",
+      "receipt_number": "FOL001234",
+      "receipt_date": "2025-06-28 14:30:00",
+      "payment_method": "Cash",
+      "tax_amount": 16.00,
+      "total_amount": 150.50
+    },
+    "items": [
+      {
+        "product_name": "Example Product",
+        "product_code": "PROD001",
+        "category": "Category",
+        "quantity": 2,
+        "unit_price": 67.25,
+        "total_price": 134.50,
+        "tax_rate": 16.00
+      }
+    ]
+  },
+  "verification_result": "NO_DUPLICATES",
+  "message": "Verification completed - No duplicates found",
+  "action": "PROCEED_WITH_INSERTION",
+  "duplicates_found": [
+    {
+      "id": 123,
+      "business_name": "Example Store",
+      "total_amount": 250.50,
+      "receipt_date": "2024-01-15T10:30:00",
+      "receipt_number": "001234"
+    }
+  ]
+}

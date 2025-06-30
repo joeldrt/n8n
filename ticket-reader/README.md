@@ -1,14 +1,38 @@
 # 🎫 Ticket Reader Agent
 
-Agente de N8N especializado en procesamiento OCR de tickets/recibos y almacenamiento en base de datos PostgreSQL.
+Sistema de N8N con **3 agentes especializados** para procesamiento OCR de tickets/recibos y almacenamiento en base de datos PostgreSQL.
 
-## 📁 Archivos del Flujo
+## 🏗️ Arquitectura de 3 Agentes
 
-### **Flujo Principal**
-- `ControlGastosEfectivoV2.json` - Workflow completo de N8N
+### **🔍 Duplicate Checker Agent**
+- **Responsabilidad**: Verificación exclusiva de duplicados
+- **Prompt**: `duplicate_checker_agent.md`
+- **Input**: JSON del ticket procesado
+- **Output**: Lista de duplicados o autorización para insertar
 
-### **Configuración del Agente**
-- `system_prompt.md` - Prompt principal del agente IA
+### **💾 Data Insertion Agent**
+- **Responsabilidad**: Inserción exclusiva de datos validados  
+- **Prompt**: `data_insertion_agent.md`
+- **Input**: JSON validado + autorización de inserción
+- **Output**: Confirmación de inserción exitosa
+
+### **🤖 Query Assistant Agent**
+- **Responsabilidad**: Consultas analíticas e interacción con usuario
+- **Prompt**: `query_assistant_agent.md`
+- **Input**: Lenguaje natural del usuario
+- **Output**: Análisis e insights en formato amigable
+
+## 📁 Archivos del Sistema
+
+### **Configuración de Agentes**
+- `duplicate_checker_agent.md` - Prompt del agente verificador
+- `data_insertion_agent.md` - Prompt del agente de inserción
+- `query_assistant_agent.md` - Prompt del agente consultor
+- `agent_architecture.md` - Documentación de la arquitectura
+- `workflow_design.md` - Diseño detallado del flujo N8N
+
+### **Sistema Legacy (Referencia)**
+- `system_prompt.md` - Prompt del agente monolítico original
 - `tables_descriptions.md` - Documentación de esquema de base de datos
 
 ### **Documentación Técnica**
@@ -22,19 +46,37 @@ Agente de N8N especializado en procesamiento OCR de tickets/recibos y almacenami
 
 ## 🚀 Cómo Usar
 
-1. **Importar el flujo**: Importa `ControlGastosEfectivoV2.json` en N8N
+### **Opción 1: Sistema de 3 Agentes (Recomendado)**
+1. **Crear 3 nodos AI Agent** en N8N
+2. **Configurar prompts**:
+   - Agent 1: Contenido de `duplicate_checker_agent.md`
+   - Agent 2: Contenido de `data_insertion_agent.md` 
+   - Agent 3: Contenido de `query_assistant_agent.md`
+3. **Configurar flujo**: Seguir diseño en `workflow_design.md`
+4. **Configurar credenciales**: Telegram, OpenAI, PostgreSQL
+5. **Activar el flujo**: Sistema robusto anti-concurrencia
+
+### **Opción 2: Sistema Legacy (Referencia)**
+1. **Importar el flujo**: `ControlGastosEfectivoV2.json` en N8N
 2. **Configurar credenciales**: Telegram, OpenAI, PostgreSQL
-3. **Copiar system prompt**: Usa el contenido de `system_prompt.md` en el nodo AI Agent
-4. **Activar el flujo**: El bot estará listo para procesar tickets
+3. **Copiar system prompt**: Usar `system_prompt.md` en el nodo AI Agent
+4. **Nota**: Puede tener problemas de concurrencia en verificación vs inserción
 
 ## 🔧 Características
 
+### **Sistema de 3 Agentes (Nuevo)**
+- **Separación de responsabilidades** - Cada agente tiene una función específica
+- **Anti-concurrencia** - Elimina problemas de inserción prematura
+- **Robustez** - Si un agente falla, no afecta a los otros
+- **Mantenibilidad** - Prompts más simples y enfocados
+
+### **Características Generales**
 - **OCR inteligente** con GPT-4o para análisis preciso de tickets
 - **Base de datos relacional** con PostgreSQL
 - **Sesiones aisladas** por usuario de Telegram
-- **Detección de duplicados** automática
+- **Detección de duplicados** automática y robusta
 - **Manejo de errores** inteligente con auto-diagnóstico
-- **Análisis de gastos** con queries predefinidos
+- **Análisis de gastos** con consultas en lenguaje natural
 
 ## 📊 Funcionalidades
 

@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: pgvector/pgvector:pg15
     container_name: n8n_postgres
     restart: unless-stopped
     environment:
@@ -27,11 +27,9 @@ services:
       - WEBHOOK_URL=${WEBHOOK_URL}
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
     volumes:
-      - n8n_data:/home/node/.n8n
+      - ./n8n-data:/home/node/.n8n
       - ./runtime-scripts:/runtime-scripts
       - ./workspace:/workspace
 
 volumes:
-  n8n_data:
-    external: true
   postgres_data:

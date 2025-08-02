@@ -11,7 +11,7 @@ The project includes a complete ticket/receipt processing workflow in the `ticke
 ## Architecture Components
 
 - **n8n Service**: Workflow automation tool with PostgreSQL backend
-- **PostgreSQL Service**: Database for storing workflows, executions, and data
+- **PostgreSQL Service**: Database with pgvector extension for storing workflows, executions, and vector data
 - **Docker Volumes**: Persistent storage for both n8n data and PostgreSQL data
 - **ngrok Tunnel**: Public URL exposure for webhook integrations
 - **Environment Configuration**: Centralized configuration via .env file

@@ -83,7 +83,14 @@ Copia la URL HTTPS que ngrok muestra (ej: `https://abcd-1234.ngrok.io`) y actual
 WEBHOOK_URL=https://abcd-1234.ngrok.io
 ```
 
-### 3. Levantar los Servicios
+### 3. Crear Volumen de Docker
+
+```bash
+docker volume create postgres_data
+docker volume create n8n_data
+```
+
+### 4. Levantar los Servicios
 
 ```bash
 # Primera vez: construir imagen con nodos de la comunidad
@@ -99,7 +106,7 @@ docker compose logs -f
 docker compose down
 ```
 
-### 4. Acceder a n8n
+### 5. Acceder a n8n
 
 Una vez que ambos servicios estén ejecutándose:
 
@@ -110,7 +117,7 @@ Una vez que ambos servicios estén ejecutándose:
 
 **¡Guarda la URL de ngrok!** Es tu puerta de entrada desde internet.
 
-### 5. Usar la URL para Webhooks
+### 6. Usar la URL para Webhooks
 
 1. En n8n, crea un nodo **Webhook**
 2. Copia la URL generada que será similar a:
@@ -119,7 +126,7 @@ Una vez que ambos servicios estén ejecutándose:
    ```
 3. Usa esta URL en Google Forms, Typeform, o cualquier servicio externo
 
-### 6. Probar el Webhook
+### 7. Probar el Webhook
 
 1. Envía datos desde el servicio externo
 2. Verifica que n8n recibe los datos
